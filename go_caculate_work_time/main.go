@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
@@ -22,8 +23,7 @@ type Data struct {
 
 func main() {
 	// 1.从参数获取文件地址
-	// fmt.Println("address: ", os.Args[1])
-	xlsx, err := excelize.OpenFile("/Users/huang/Downloads/上下班打卡_日报_20240701-20240711.xlsx")
+	xlsx, err := excelize.OpenFile(os.Args[1])
 	if err != nil {
 		fmt.Println("read file error. ", err)
 	}
@@ -64,6 +64,8 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+	var bounceCount int
+	var lateCount int
 	for _, v := range dataList {
 		if v.CheckInAt == "未打卡" && v.CheckOutAt == "未打卡" {
 			continue
@@ -80,18 +82,25 @@ func main() {
 		}
 		// 弹性打卡
 		if t1.After(morningBaseAt) && count == 2 {
+			bounceCount+=1
 			sub := morningBaseAt.Sub(t1).Minutes()
 			totalMinutes += sub
 		}
 		// 下班打卡
 		t2, _ := timeFormat(v.CheckOutAt)
-		if t2.After(nightBaseAt) && count == 2 {
+		if t2.Before(nightBaseAt){
+			continue
+		}else if t2.After(nightBaseAt) && count == 2 {
 			sub := t2.Sub(nightBaseAt).Minutes()
 			totalMinutes += sub
 		}
-		fmt.Printf("%s【最早】%s\t【最晚】%s\t【累计】%f\n", v.CheckInDayAt, v.CheckInAt, v.CheckOutAt, totalMinutes)
+		fmt.Printf("%s【最早】%s\t【最晚】%s\t【累计】%.0f mins\n", v.CheckInDayAt, v.CheckInAt, v.CheckOutAt, totalMinutes)
 	}
-	fmt.Println("Total Time: ", totalMinutes/60)
+	if bounceCount > 8{
+		lateCount = bounceCount-8
+		bounceCount = 8
+	}
+	fmt.Printf("剩余工时: %.2f\n弹性打卡次数: %d次\n迟到次数: %d", totalMinutes/60,bounceCount,lateCount)
 }
 
 func timeFormat(t string) (time.Time, error) {
