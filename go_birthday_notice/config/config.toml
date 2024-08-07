@@ -1,0 +1,8 @@
+port="80"
+
+[sqlLite]
+dsn = "file:.db?cache=shared&mode=rwc"
+maxIdleConns = 25
+maxOpenConns = 100
+connMaxLifetime = 30
+
