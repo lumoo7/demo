@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+message Request{
+  required string user_name = 1;
+  required string user_pwd = 2;
+}
+
+message Response{
+  required string message = 1;
+  required int32 code = 2;
+}
+
+service Login{
+  rpc UserLogin(Request) returns (Response) {};
+}
